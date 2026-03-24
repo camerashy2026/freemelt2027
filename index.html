@@ -160,9 +160,47 @@ body{font-family:'PingFang SC','Segoe UI',Arial,sans-serif;background:var(--bg);
 .mat-high{background:var(--green-l);color:var(--green)}
 .mat-medium{background:var(--amber-l);color:var(--amber)}
 .mat-low{background:var(--red-l);color:var(--red)}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.modal-box{background:#fff;border-radius:14px;padding:30px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-title{font-size:18px;font-weight:700;color:var(--gray);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.modal-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:monospace;color:var(--gray);outline:none;transition:border-color .2s}
+.modal-input:focus{border-color:var(--blue)}
+.modal-hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+.modal-hint a{color:var(--blue)}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.key-status-bar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 32px;font-size:12.5px;display:flex;align-items:center;gap:6px}
 </style>
 </head>
 <body>
+
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="keyModal" style="display:none" onclick="if(event.target===this&&getApiKey())hideKeyModal()">
+  <div class="modal-box">
+    <div class="modal-title">🔑 设置 Anthropic API Key</div>
+    <div class="modal-sub">在 GitHub Pages 上运行需要你自己的 API Key，密钥仅保存在你的浏览器本地，不会上传到任何服务器。</div>
+    <input class="modal-input" id="keyInput" type="password" placeholder="sk-ant-api03-..." autocomplete="off"
+      onkeydown="if(event.key==='Enter')saveKeyAndClose()">
+    <div class="modal-hint">
+      还没有 API Key？<a href="https://console.anthropic.com/settings/keys" target="_blank">点这里免费获取 →</a><br>
+      注册后在 API Keys 页面点 Create Key，复制 <code>sk-ant-</code> 开头的字符串粘贴到上方。<br>
+      新用户有免费额度，每次搜索约消耗 $0.01–0.03。
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="if(getApiKey())hideKeyModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveKeyAndClose()">保存并继续</button>
+    </div>
+  </div>
+</div>
+
+<!-- Key Status Bar -->
+<div class="key-status-bar">
+  <span style="color:var(--muted);font-size:12px">API Key 状态：</span>
+  <span id="keyStatus"></span>
+</div>
 
 <div class="header">
   <div class="header-top">
@@ -424,17 +462,55 @@ function stepRun(id) { const e=document.getElementById(id); if(e) e.className='s
 function stepDone(id) { const e=document.getElementById(id); if(e) e.className='step-item done'; }
 function resetSteps() { ['s1','s2','s3','s4','s5','s6','s7'].forEach(id=>{ const e=document.getElementById(id); if(e) e.className='step-item'; }); }
 
+// ── API Key management ────────────────────────────────────────────────
+const KEY_STORE = 'freemelt2027_apikey';
+function getApiKey() { return localStorage.getItem(KEY_STORE) || ''; }
+function saveApiKey(k) { localStorage.setItem(KEY_STORE, k.trim()); }
+function clearApiKey() { localStorage.removeItem(KEY_STORE); }
+
+function showKeyModal() {
+  document.getElementById('keyModal').style.display='flex';
+  document.getElementById('keyInput').value = getApiKey();
+  setTimeout(()=>document.getElementById('keyInput').focus(),100);
+}
+function hideKeyModal() { document.getElementById('keyModal').style.display='none'; }
+function saveKeyAndClose() {
+  const v = document.getElementById('keyInput').value.trim();
+  if(!v){ alert('请输入 API Key'); return; }
+  if(!v.startsWith('sk-ant-')){ alert('API Key 格式不正确，应以 sk-ant- 开头'); return; }
+  saveApiKey(v);
+  hideKeyModal();
+  updateKeyStatus();
+}
+function updateKeyStatus() {
+  const k = getApiKey();
+  const el = document.getElementById('keyStatus');
+  if(!el) return;
+  if(k) {
+    el.innerHTML = `<span style="color:var(--green)">✓ API Key 已设置</span>
+      <button class="btn btn-ghost btn-sm" onclick="showKeyModal()" style="margin-left:8px;font-size:11px">修改</button>
+      <button class="btn btn-ghost btn-sm" onclick="if(confirm('确认清除API Key？'))clearApiKey(),updateKeyStatus()" style="margin-left:4px;font-size:11px;color:var(--red)">清除</button>`;
+  } else {
+    el.innerHTML = `<span style="color:var(--red)">✗ 未设置 API Key</span>
+      <button class="btn btn-primary btn-sm" onclick="showKeyModal()" style="margin-left:8px;font-size:11px">立即设置</button>`;
+  }
+}
+
 // ── Claude API ────────────────────────────────────────────────────────
 async function callClaude(prompt) {
+  const apiKey = getApiKey();
+  if(!apiKey) { showKeyModal(); throw new Error('请先设置 Anthropic API Key'); }
   const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514", max_tokens:1000,
       tools:[{type:"web_search_20250305",name:"web_search"}],
       messages:[{role:"user",content:prompt}]
     })
   });
-  if(!r.ok) throw new Error(`API ${r.status}`);
+  if(r.status===401) { clearApiKey(); updateKeyStatus(); throw new Error('API Key 无效，请重新设置'); }
+  if(!r.ok) throw new Error(`API 错误 ${r.status}：请检查 API Key 和网络`);
   const d = await r.json();
   return d.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
 }
@@ -694,7 +770,7 @@ async function clearAll() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────
-(async()=>{ const entries=await loadEntries(); renderAll(entries); })();
+(async()=>{ updateKeyStatus(); const entries=await loadEntries(); renderAll(entries); if(!getApiKey()) setTimeout(showKeyModal,800); })();
 </script>
 </body>
 </html>
