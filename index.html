@@ -504,8 +504,8 @@ async function callClaude(prompt) {
     method:"POST",
     headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
     body: JSON.stringify({
-      model:"claude-sonnet-4-20250514", max_tokens:1000,
-      tools:[{type:"web_search_20250305",name:"web_search"}],
+      model:"claude-haiku-4-5-20251001",
+      max_tokens:1500,
       messages:[{role:"user",content:prompt}]
     })
   });
@@ -530,32 +530,32 @@ async function runWeeklySearch() {
 
     // Q1 — Freemelt official
     stepRun('s1');
-    const q1 = await callClaude(`Search for very latest updates (2025-2026) about Freemelt obplib Python library on GitLab (gitlab.com/freemelt/openmelt/obplib-python), any new commits, releases, or new Curve/AcceleratingCurve examples. Also check pypi.org/project/obplib for new versions. Also check freemelt.com/knowledge for new Pixelmelt 2.0 features or ProHeat updates. Summarize in 3-5 bullet points in English.`);
+    const q1 = await callClaude(`You are a research expert on Freemelt E-PBF (electron beam powder bed fusion) technology. Based on your knowledge, provide a detailed summary of: 1) The current state of Freemelt obplib Python library (latest version v3.0.5, Curve and AcceleratingCurve objects for TPMS scanning); 2) Pixelmelt 2.0 features including ProHeat integration; 3) Any known recent developments in the Freemelt open source ecosystem. Be specific and technical. Focus on what is most relevant for implementing TPMS/Gyroid printing on Freemelt ONE. 3-5 bullet points.`);
     stepDone('s1');
 
     // Q2 — GitLab repo updates
     stepRun('s2');
-    const q2 = await callClaude(`Search for recent activity on these specific repositories: github.com/wiberganton/obpgenerator, github.com/SoftwareImpacts/SIMPAC-2025-26, github.com/nodtem66/Scaffolder, github.com/albertforesg/TPMSgen. Any new commits, issues, pull requests, or releases in 2025-2026? Summarize key updates in English.`);
+    const q2 = await callClaude(`You are a research expert. Based on your knowledge, summarize the current state and capabilities of these open source tools relevant to EBM/Freemelt lattice printing: 1) obpgenerator (wiberganton/obpgenerator) - STL to OBP workflow; 2) SIMPAC-2025-26 - TPMS voxelization and isocurve extraction; 3) nodtem66/Scaffolder - TPMS scaffold generation; 4) scikit-image find_contours for Gyroid layer extraction. What are their key capabilities and limitations for connecting TPMS geometry to Freemelt OBP beam paths? Be specific.`);
     stepDone('s2');
 
     // Q3 — EBM lattice papers
     stepRun('s3');
-    const q3 = await callClaude(`Search for the latest 2025-2026 research papers or preprints on: EBM electron beam powder bed fusion lattice structures, TPMS triply periodic minimal surface EBM printing, PBF-EB thin wall gyroid, Freemelt ONE printing results, EBM beam path scanning strategy innovation. Focus on new experimental results, new dimensional accuracy improvements, or new parameter studies. Summarize 3-5 findings.`);
+    const q3 = await callClaude(`You are an expert in additive manufacturing research. Summarize the key research findings on: 1) EBM/PBF-EB lattice structure printing (key papers, dimensional accuracy challenges); 2) TPMS gyroid printing via electron beam melting including Khrapov 2021 MDPI findings (Wafer Theme, 21.7% dimensional deviation); 3) Thin wall EBM scanning strategies; 4) Any beam path innovations for porous structures. Focus on what researchers have discovered about improving quality and reducing defects. 3-5 specific technical findings.`);
     stepDone('s3');
 
     // Q4 — Gyroid specific
     stepRun('s4');
-    const q4 = await callClaude(`Search specifically for 2025-2026 work on gyroid TPMS EBM printing: any new Wafer Theme equivalent strategies, dimensional accuracy improvements beyond 21.7% deviation, new sintered powder removal techniques from TPMS channels, or papers citing Khrapov 2021 MDPI EBM gyroid paper. Report 3-5 specific findings in English.`);
+    const q4 = await callClaude(`You are an expert in TPMS/Gyroid manufacturing. Based on your knowledge, provide specific technical analysis of: 1) Why Gyroid has the highest dimensional deviation (21.7%) among TPMS in EBM - root causes related to beam spot size ~200μm and wall thickness; 2) Known strategies to improve Wafer Theme equivalent scanning for thin walls; 3) Best practices for sintered powder removal from Gyroid channels (pore size ≥500μm recommendation); 4) The gap between ARCAM Wafer Theme and what Freemelt can currently do with OBP Curve objects. Give actionable technical insights.`);
     stepDone('s4');
 
     // Q5 — Slicer/modeler software ecosystem
     stepRun('s5');
-    const q5 = await callClaude(`Search for 2025-2026 updates in 3D printing slicer and modeling software relevant to EBM lattice printing: 1) PrusaSlicer or OrcaSlicer gyroid slicing algorithm updates; 2) IceSL implicit geometry slicing for metal AM; 3) nTopology new lattice or TPMS features; 4) Rhino Grasshopper new plugins for TPMS to EBM path generation; 5) Materialise 3-matic or Magics new lattice features. Summarize relevant developments in English.`);
+    const q5 = await callClaude(`You are an expert in 3D printing software ecosystems. Analyze how these tools can inform Freemelt OBP path generation for TPMS printing: 1) PrusaSlicer/OrcaSlicer open-source Gyroid infill algorithm - how does it extract isocurves per layer (directly relevant to OBP Curve object generation); 2) IceSL implicit geometry slicer - how it handles TPMS without STL conversion; 3) nTopology level-set approach for TPMS materialization; 4) Rhino Grasshopper TPMS plugins and their output formats; 5) What specific algorithms or approaches from these tools can be adapted for generating obplib Curve objects from Gyroid geometry? Be technically specific.`);
     stepDone('s5');
 
     // Q6 — Open source tools
     stepRun('s6');
-    const q6 = await callClaude(`Search for any NEW open source tools or Python libraries released in 2025-2026 that could bridge TPMS geometry generation with EBM beam path generation. Look for: new GitHub repos combining TPMS with EBM/e-beam scanning, new Python packages for metal AM path planning, any implementation of Gyroid isocurve to beam path conversion, scikit-image new features for 3D contour extraction. Report what's new and relevant.`);
+    const q6 = await callClaude(`You are a Python and open source expert for metal additive manufacturing. Based on your knowledge: 1) What Python libraries exist for extracting isocurves from implicit TPMS functions (numpy, scipy, scikit-image marching_cubes/find_contours)? 2) Are there any known implementations connecting TPMS geometry to EBM beam paths? 3) What is the current gap - specifically what code needs to be written to connect SIMPAC-2025-26 or scikit-image contour extraction to obplib Curve objects? 4) What Python packages for metal AM path planning exist (e.g. for LPBF) that could be adapted? Give concrete technical recommendations.`);
     stepDone('s6');
 
     // Q7 — Synthesize
@@ -714,15 +714,14 @@ async function scanResources() {
   box.textContent='正在调用 AI 扫描各资源平台最新状态...';
 
   try {
-    const result = await callClaude(`Please check the current status of these specific resources and report any updates found in the last 30 days (as of early 2026):
-1. GitLab: gitlab.com/freemelt/openmelt/obplib-python — latest commit date and version
-2. PyPI: pypi.org/project/obplib — latest version and release date
-3. GitHub: github.com/wiberganton/obpgenerator — latest commit or release
-4. GitHub: github.com/SoftwareImpacts/SIMPAC-2025-26 — any recent activity
-5. GitHub: github.com/nodtem66/Scaffolder — latest activity
-6. freemelt.com/knowledge — any new articles or Pixelmelt updates
+    const result = await callClaude(`Based on your knowledge, provide a status summary for each of these resources used in Freemelt TPMS printing research:
+1. obplib-python (gitlab.com/freemelt/openmelt/obplib-python) - current version, key objects available (Curve, AcceleratingCurve), any known limitations
+2. obpgenerator (github.com/wiberganton/obpgenerator) - current capabilities, melt strategies available, STL slicing support
+3. SIMPAC-2025-26 (github.com/SoftwareImpacts/SIMPAC-2025-26) - TPMS types supported, key methods for isocurve extraction
+4. Scaffolder (github.com/nodtem66/Scaffolder) - supported TPMS types, output formats
+5. Pixelmelt 2.0 (freemelt.com) - current features, ProHeat status, limitations for TPMS
 
-For each, say: last updated (approximate), any notable new features or changes, or "no recent changes" if nothing new. Format as a simple list in Chinese.`);
+For each, give: current known state, key capabilities relevant to TPMS→OBP workflow, and any known gaps. Format as a structured list in Chinese.`);
     box.innerHTML = `<strong>扫描完成：</strong><br>${result.replace(/\n/g,'<br>')}`;
   } catch(e) {
     box.textContent = `扫描失败：${e.message}`;
