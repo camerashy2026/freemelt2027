@@ -464,7 +464,6 @@ function resetSteps() { ['s1','s2','s3','s4','s5','s6','s7'].forEach(id=>{ const
 
 // ── API Key management ────────────────────────────────────────────────
 const KEY_STORE = 'freemelt2027_apikey';
-if(!getApiKey()) saveApiKey('sk-ant-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');
 function getApiKey() { return localStorage.getItem(KEY_STORE) || ''; }
 function saveApiKey(k) { localStorage.setItem(KEY_STORE, k.trim()); }
 function clearApiKey() { localStorage.removeItem(KEY_STORE); }
