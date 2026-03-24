@@ -464,6 +464,7 @@ function resetSteps() { ['s1','s2','s3','s4','s5','s6','s7'].forEach(id=>{ const
 
 // ── API Key management ────────────────────────────────────────────────
 const KEY_STORE = 'freemelt2027_apikey';
+if(!getApiKey()) saveApiKey('sk-ant-你的完整APIKey');
 function getApiKey() { return localStorage.getItem(KEY_STORE) || ''; }
 function saveApiKey(k) { localStorage.setItem(KEY_STORE, k.trim()); }
 function clearApiKey() { localStorage.removeItem(KEY_STORE); }
