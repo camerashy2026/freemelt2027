@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FREEMELT 晶格 2027 — 研究追踪模块 v2</title>
+<style>
+:root {
+  --blue:#1F4E79; --blue-l:#D6E4F0; --blue-m:#AED6F1;
+  --teal:#0F6E56; --teal-l:#D1F2EB; --teal-m:#76D7C4;
+  --amber:#9A7D0A; --amber-l:#FEF9E7; --amber-m:#FAD7A0;
+  --red:#C0392B; --red-l:#FDEDEC;
+  --green:#1E8449; --green-l:#E9F7EF;
+  --purple:#6C3483; --purple-l:#F4ECF7;
+  --gray:#2C3E50; --gray-l:#F0F2F5; --gray-m:#D5D8DC;
+  --bg:#F4F6F9; --card:#fff; --border:#DEE2EA;
+  --text:#1A1D23; --muted:#6B7280;
+  --radius:10px; --shadow:0 2px 14px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'PingFang SC','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Header ── */
+.header{background:linear-gradient(135deg,#1a3a5c 0%,#1F4E79 50%,#1a6b8a 100%);padding:26px 32px 22px;color:#fff}
+.header-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:46px;height:46px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.logo-text h1{font-size:21px;font-weight:700;letter-spacing:.4px}
+.logo-text p{font-size:12px;opacity:.8;margin-top:2px}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;letter-spacing:.8px}
+.badge.v2{background:rgba(46,213,115,.25);border-color:rgba(46,213,115,.5)}
+.header-meta{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap}
+.meta-item{font-size:12px;opacity:.85}
+.meta-item span{font-weight:600;opacity:1}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card);padding:0 20px}
+.tab{padding:13px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.active){color:var(--gray)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── Layout ── */
+.container{max-width:1100px;margin:0 auto;padding:24px 20px}
+.grid{display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+/* ── Cards ── */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-title{font-size:14px;font-weight:700;color:var(--gray);display:flex;align-items:center;gap:8px}
+.card-body{padding:18px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#174070;transform:translateY(-1px);box-shadow:0 4px 12px rgba(31,78,121,.3)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-teal:hover{background:#0a5240}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--gray-l);color:var(--gray)}
+
+/* ── Progress ── */
+.progress-box{background:linear-gradient(135deg,#EBF5FB,#D6EAF8);border:1px solid var(--blue-m);border-radius:10px;padding:16px 20px;margin-bottom:18px;display:none}
+.progress-box.active{display:block}
+.progress-title{font-weight:700;color:var(--blue);font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.step-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+@media(max-width:600px){.step-grid{grid-template-columns:1fr}}
+.step-item{font-size:12px;color:var(--muted);padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:6px;transition:all .3s}
+.step-item.done{color:var(--green);background:var(--green-l)}
+.step-item.running{color:var(--blue);background:var(--blue-l);font-weight:600}
+.step-item::before{content:"○";font-size:11px;flex-shrink:0}
+.step-item.done::before{content:"✓";color:var(--green)}
+.step-item.running::before{content:"◉";color:var(--blue)}
+.spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(31,78,121,.2);border-top:2px solid var(--blue);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Timeline ── */
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue-m),var(--gray-m))}
+.entry{position:relative;margin-bottom:24px}
+.entry-dot{position:absolute;left:-22px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--blue);border:3px solid var(--card);box-shadow:0 0 0 2px var(--blue-m)}
+.entry-dot.new-dot{background:var(--green);box-shadow:0 0 0 3px var(--teal-m)}
+.entry-meta{font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.week-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--blue);color:#fff}
+.week-badge.new{background:var(--green)}
+.new-label{font-size:10px;color:var(--green);font-weight:700}
+.entry-card{background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.entry-card.new-card{border-color:var(--teal-m);box-shadow:0 0 0 2px rgba(15,110,86,.1)}
+.entry-head{padding:11px 16px;background:var(--gray-l);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.entry-head h3{font-size:13px;font-weight:700;color:var(--gray)}
+.entry-body{padding:14px 16px}
+.sec{margin-bottom:13px}
+.sec:last-child{margin-bottom:0}
+.sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.sec-content{font-size:12.5px;line-height:1.75;color:var(--text)}
+.highlight-box{background:var(--teal-l);border-left:3px solid var(--teal);border-radius:0 7px 7px 0;padding:10px 13px;font-size:12.5px;color:var(--gray);line-height:1.65}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.tag{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:500}
+.tag-blue{background:var(--blue-l);color:var(--blue)}
+.tag-green{background:var(--green-l);color:var(--green)}
+.tag-amber{background:var(--amber-l);color:var(--amber)}
+.tag-red{background:var(--red-l);color:var(--red)}
+.tag-purple{background:var(--purple-l);color:var(--purple)}
+.ref-list{list-style:none}
+.ref-list li{font-size:11.5px;color:var(--muted);padding:2px 0;display:flex;align-items:flex-start;gap:5px}
+.ref-list li::before{content:"→";color:var(--blue);flex-shrink:0}
+.score-bar{display:flex;gap:3px;margin-top:4px}
+.score-dot{width:8px;height:8px;border-radius:50%;background:var(--gray-m)}
+.score-dot.filled-green{background:var(--green)}
+.score-dot.filled-amber{background:var(--amber)}
+.score-dot.filled-red{background:var(--red)}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.sub-grid{grid-template-columns:1fr}}
+.sub-box{background:var(--gray-l);border-radius:7px;padding:10px 12px}
+.sub-box-title{font-size:11px;font-weight:700;color:var(--gray);margin-bottom:4px}
+.sub-box-content{font-size:11.5px;color:var(--muted);line-height:1.6}
+
+/* ── Resource Monitor ── */
+.res-table{width:100%;border-collapse:collapse;font-size:12px}
+.res-table th{text-align:left;padding:8px 10px;background:var(--gray-l);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border)}
+.res-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.res-table tr:last-child td{border-bottom:none}
+.res-table tr:hover td{background:#fafbfc}
+.res-link{color:var(--blue);font-size:11px;word-break:break-all}
+.res-tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600}
+.res-status-ok{background:var(--green-l);color:var(--green)}
+.res-status-new{background:var(--amber-l);color:var(--amber)}
+.res-status-check{background:var(--blue-l);color:var(--blue)}
+.res-cat{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── Sidebar ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-box{background:var(--gray-l);border-radius:8px;padding:12px;text-align:center}
+.stat-num{font-size:24px;font-weight:800;color:var(--blue)}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px}
+.topic-list{list-style:none}
+.topic-list li{padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;display:flex;align-items:center;gap:8px}
+.topic-list li:last-child{border-bottom:none}
+.topic-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:14px}
+.empty h3{font-size:15px;font-weight:600;margin-bottom:7px;color:var(--gray)}
+.empty p{font-size:12.5px;line-height:1.65}
+
+/* ── Error ── */
+.error-box{background:var(--red-l);border:1px solid #F5B7B1;border-radius:8px;padding:12px 16px;font-size:12.5px;color:var(--red);margin-bottom:14px;display:none}
+.error-box.active{display:block}
+.alert{border-radius:8px;padding:11px 15px;font-size:12.5px;margin-bottom:16px;border:1px solid transparent}
+.alert-info{background:var(--teal-l);border-color:var(--teal-m);color:var(--teal)}
+
+/* ── Maturity badge ── */
+.mat-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px}
+.mat-high{background:var(--green-l);color:var(--green)}
+.mat-medium{background:var(--amber-l);color:var(--amber)}
+.mat-low{background:var(--red-l);color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">🔬</div>
+      <div class="logo-text">
+        <h1>FREEMELT 晶格 2027</h1>
+        <p>Freemelt E-PBF 晶格结构打印 · 全栈研究追踪平台</p>
+      </div>
+    </div>
+    <div class="badge-row">
+      <div class="badge v2">v2.0</div>
+      <div class="badge">RESEARCH TRACKER</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="meta-item">追踪重点：<span>EB-PBF 晶格 · TPMS · OBP路径生成 · 3D打印切片生态</span></div>
+    <div class="meta-item">目标机台：<span>Freemelt ONE · eMELT · ARCAM 对比</span></div>
+    <div class="meta-item">关联材料：<span>Ti-6Al-4V · W · 难熔合金 · CoCr</span></div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('weekly',this)">📅 每周更新</div>
+  <div class="tab" onclick="switchTab('resources',this)">🗂 资源监测</div>
+  <div class="tab" onclick="switchTab('about',this)">ℹ️ 关于</div>
+</div>
+
+<!-- ══════════ TAB: Weekly ══════════ -->
+<div class="tab-content active" id="tab-weekly">
+<div class="container">
+  <div class="grid">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="font-size:17px;color:var(--gray)">📅 每周研究更新</h2>
+          <p style="font-size:12px;color:var(--muted);margin-top:3px">AI 深度搜索 · 七路并行 · 生成结构化周报并永久保存</p>
+        </div>
+        <button class="btn btn-primary" id="fetchBtn" onclick="runWeeklySearch()">
+          <span id="btnIcon">⚡</span>
+          <span id="btnText">生成本周研究更新</span>
+        </button>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>📌 v2 升级说明：</strong> 本版本搜索范围大幅扩展——除 Freemelt/obplib 外，新增追踪 nTopology、Materialise Magics、Netfabb、Rhino Grasshopper、PrusaSlicer 等主流切片/建模软件与 EBM 晶格的结合进展，同时定向监测所有已知开源仓库的更新。
+      </div>
+
+      <div class="progress-box" id="progressBox">
+        <div class="progress-title"><span class="spinner"></span> &nbsp;AI 正在七路并行搜索中，请稍候...</div>
+        <div class="step-grid" id="stepList">
+          <div class="step-item" id="s1">Freemelt obplib / OBP 官方动态</div>
+          <div class="step-item" id="s2">GitLab 仓库更新检测</div>
+          <div class="step-item" id="s3">EBM 晶格 / TPMS 最新论文</div>
+          <div class="step-item" id="s4">Gyroid 实验结果与参数</div>
+          <div class="step-item" id="s5">切片/建模软件生态动态</div>
+          <div class="step-item" id="s6">GitHub 第三方工具更新</div>
+          <div class="step-item" id="s7">综合分析与报告生成</div>
+        </div>
+      </div>
+
+      <div class="error-box" id="errorBox"></div>
+      <div id="timeline" class="timeline"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 研究统计</span></div>
+        <div class="card-body">
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-num" id="statWeeks">0</div><div class="stat-label">累计周报</div></div>
+            <div class="stat-box"><div class="stat-num" id="statRefs">0</div><div class="stat-label">引用文献</div></div>
+            <div class="stat-box"><div class="stat-num">8</div><div class="stat-label">追踪仓库</div></div>
+            <div class="stat-box"><div class="stat-num">7</div><div class="stat-label">搜索维度</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:center" id="lastUpdate">尚未生成任何周报</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">🎯 追踪议题（v2 扩展版）</span></div>
+        <div class="card-body" style="padding:12px 16px">
+          <ul class="topic-list">
+            <li><span class="topic-dot" style="background:var(--blue)"></span>obplib Curve / AcceleratingCurve API</li>
+            <li><span class="topic-dot" style="background:var(--teal)"></span>TPMS 等值线 → OBP 路径转换</li>
+            <li><span class="topic-dot" style="background:var(--green)"></span>Pixelmelt 2.0 / ProHeat® 新功能</li>
+            <li><span class="topic-dot" style="background:var(--amber)"></span>EBM 晶格打印实验结果</li>
+            <li><span class="topic-dot" style="background:#8E44AD"></span>GitHub 第三方工具更新</li>
+            <li><span class="topic-dot" style="background:var(--red)"></span>粉末清除工艺新方法</li>
+            <li><span class="topic-dot" style="background:#E67E22"></span>nTopology / 3-matic 晶格 CAM</li>
+            <li><span class="topic-dot" style="background:#2874A6"></span>Rhino/Grasshopper TPMS 插件</li>
+            <li><span class="topic-dot" style="background:#1ABC9C"></span>开源切片器 EBM 路径扩展</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">⚙️ 操作</span></div>
+        <div class="card-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost btn-sm" style="justify-content:center" onclick="exportMarkdown()">📥 导出全部为 Markdown</button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:center;color:var(--red)" onclick="clearAll()">🗑 清除所有记录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB: Resources ══════════ -->
+<div class="tab-content" id="tab-resources">
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 style="font-size:17px;color:var(--gray)">🗂 资源监测中心</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:3px">所有追踪资源的完整列表 · 点击"扫描更新"检测各平台最新动态</p>
+    </div>
+    <button class="btn btn-teal" onclick="scanResources()">
+      <span id="scanIcon">🔍</span>
+      <span id="scanText">扫描所有资源更新</span>
+    </button>
+  </div>
+
+  <div id="scanResult" style="display:none" class="alert alert-info" id="scanProgress">正在扫描...</div>
+
+  <!-- Freemelt 官方 -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">🟦 Freemelt 官方资源</span></div>
+    <div class="card-body" style="padding:0">
+      <table class="res-table">
+        <thead><tr><th>资源名称</th><th>平台</th><th>功能说明</th><th>对 TPMS 的价值</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td><strong>OBPlib-Python</strong><div class="res-cat"><a class="res-link" href="https://gitlab.com/freemelt/openmelt/obplib-python" target="_blank">gitlab.com/freemelt/openmelt/obplib-python</a></div></td><td>GitLab</td><td>核心束斑路径生成库，v3.0.5，含 <strong>Curve / AcceleratingCurve</strong> 原语</td><td>⭐⭐⭐⭐⭐ 最关键 — 曲线扫描底层 API</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>OpenBuildFile</strong><div class="res-cat"><a class="res-link" href="https://gitlab.com/freemelt/openmelt/openbuildfile" target="_blank">gitlab.com/freemelt/openmelt/openbuildfile</a></div></td><td>GitLab</td><td>OBF 文件格式规范，含 buildProcessors Lua 脚本</td><td>⭐⭐⭐ 构建完整构建文件的规范</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>OBFlib-Python</strong><div class="res-cat"><a class="res-link" href="https://gitlab.com/freemelt/openmelt/obflib-python" target="_blank">gitlab.com/freemelt/openmelt/obflib-python</a></div></td><td>GitLab</td><td>OBF 文件验证、读取和操作库，含 obftool CLI</td><td>⭐⭐ 调试和验证工具</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>obplib（PyPI）</strong><div class="res-cat"><a class="res-link" href="https://pypi.org/project/obplib/" target="_blank">pypi.org/project/obplib</a></div></td><td>PyPI</td><td>pip install obplib · 最新 v3.0.5</td><td>⭐⭐⭐⭐⭐ 与 GitLab 同步，可 pip 直接安装</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>obflib（PyPI）</strong><div class="res-cat"><a class="res-link" href="https://pypi.org/project/obflib/" target="_blank">pypi.org/project/obflib</a></div></td><td>PyPI</td><td>OBF 文件 pip 包</td><td>⭐⭐ 辅助工具</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>Pixelmelt 2.0</strong><div class="res-cat"><a class="res-link" href="https://freemelt.com/knowledge/why-melting-pixels/" target="_blank">freemelt.com/knowledge/why-melting-pixels</a></div></td><td>Web</td><td>官方云端点熔化软件，ProHeat® 集成，支持全流程 OBP 生成</td><td>⭐⭐⭐⭐ 像素点阵策略 — 实心截面</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>obplib Jupyter 教程</strong><div class="res-cat"><a class="res-link" href="https://freemelt.com/knowledge/learning-obplib-with-jupyter-notebooks/" target="_blank">freemelt.com/knowledge/learning-obplib...</a></div></td><td>MyBinder</td><td>官方互动教程，可直接在线运行生成 OBP 文件</td><td>⭐⭐⭐ 入门学习最低门槛</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GitHub 第三方 -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">🟩 GitHub 第三方工具</span></div>
+    <div class="card-body" style="padding:0">
+      <table class="res-table">
+        <thead><tr><th>工具名称</th><th>链接</th><th>功能</th><th>与 TPMS+OBP 的关系</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td><strong>obpgenerator</strong></td><td><a class="res-link" href="https://github.com/wiberganton/obpgenerator" target="_blank">wiberganton/obpgenerator</a></td><td>STL→切片→OBP，内置 line_snake / point_random 等策略</td><td>⭐⭐⭐⭐ 最接近完整工作流的第三方封装</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>SIMPAC-2025-26</strong></td><td><a class="res-link" href="https://github.com/SoftwareImpacts/SIMPAC-2025-26" target="_blank">SoftwareImpacts/SIMPAC-2025-26</a></td><td>Python TPMS 体素化，level_set() 提取指定 Z 层等值线</td><td>⭐⭐⭐⭐ Gyroid 等值线提取的关键中间件</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>Scaffolder</strong></td><td><a class="res-link" href="https://github.com/nodtem66/Scaffolder" target="_blank">nodtem66/Scaffolder</a></td><td>STL + 隐式函数（Gyroid/Schwarz P）生成支架，参数化孔隙率控制</td><td>⭐⭐⭐ TPMS 几何生成，可对接 OBP 流程</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>TPMSgen</strong></td><td><a class="res-link" href="https://github.com/albertforesg/TPMSgen" target="_blank">albertforesg/TPMSgen</a></td><td>Rhino/Grasshopper 环境 TPMS 参数化生成器</td><td>⭐⭐ 需额外格式转换</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>TPMS-Modeler</strong></td><td><a class="res-link" href="https://github.com/danielpmorton/TPMS-Modeler" target="_blank">danielpmorton/TPMS-Modeler</a></td><td>TPMS 网格生成，输出标准 STL</td><td>⭐⭐ 可通过 obpgenerator 切片</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>PyMesh / trimesh</strong></td><td><a class="res-link" href="https://github.com/PyMesh/PyMesh" target="_blank">PyMesh</a> · <a class="res-link" href="https://github.com/mikedh/trimesh" target="_blank">trimesh</a></td><td>Python 通用 3D 网格处理库，支持布尔运算、切片、法向量</td><td>⭐⭐⭐ 辅助 TPMS STL 预处理</td><td><span class="res-tag res-status-check">监测中</span></td></tr>
+          <tr><td><strong>scikit-image</strong></td><td><a class="res-link" href="https://github.com/scikit-image/scikit-image" target="_blank">scikit-image/scikit-image</a></td><td>marching_cubes · find_contours — 直接提取 Gyroid 等值线</td><td>⭐⭐⭐⭐⭐ 最核心的中间件依赖</td><td><span class="res-tag res-status-ok">成熟稳定</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 商业切片/建模软件 -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">🟨 商业切片 / 建模软件（参考借鉴）</span></div>
+    <div class="card-body" style="padding:0">
+      <table class="res-table">
+        <thead><tr><th>软件名称</th><th>厂商</th><th>与 EBM 晶格的关联</th><th>可借鉴的能力</th><th>开放性</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Materialise Magics</strong><br><span class="res-cat">+ 3-matic + Build Processor</span></td><td>Materialise</td><td>ARCAM EBM 的官方 CAM 生态，Melt/Net/Wafer 主题自动分配</td><td>基于切片的晶格操作、STL 修复、多主题同层调度逻辑</td><td><span class="res-tag res-status-new">商业封闭</span></td></tr>
+          <tr><td><strong>nTopology</strong></td><td>nTop</td><td>隐式建模，原生支持 TPMS 生成、梯度晶格、拓扑优化，输出 STL/3mf</td><td>level_set() 生成 TPMS → 可对接 obpgenerator 切片流程</td><td><span class="res-tag res-status-new">商业，有试用</span></td></tr>
+          <tr><td><strong>Autodesk Netfabb</strong></td><td>Autodesk</td><td>支持晶格设计、EBM 构建准备、支撑生成</td><td>晶格参数化策略、倾斜杆件的过熔补偿逻辑</td><td><span class="res-tag res-status-new">商业封闭</span></td></tr>
+          <tr><td><strong>Rhino + Grasshopper</strong></td><td>McNeel</td><td>参数化建模，Grasshopper 可生成 TPMS、等值面、自定义晶格</td><td>TPMS 曲线提取逻辑可迁移为 Python 脚本，直接对接 obplib Curve</td><td><span class="res-tag res-status-ok">半开放，插件生态丰富</span></td></tr>
+          <tr><td><strong>PrusaSlicer / OrcaSlicer</strong></td><td>Prusa / Bambu</td><td>面向 FDM，但内置 Gyroid 填充算法（等值线切片逻辑开源）</td><td>Gyroid 等值线逐层提取的切片算法可作为 OBP 路径生成的参考实现</td><td><span class="res-tag res-status-ok">完全开源</span></td></tr>
+          <tr><td><strong>IceSL</strong></td><td>Inria</td><td>脚本驱动切片器，支持 TPMS / 隐式几何直接切片，无需 STL 中间格式</td><td>隐式函数→切片路径的直接生成方法，是 TPMS→OBP 最接近的参考架构</td><td><span class="res-tag res-status-ok">免费，部分开放</span></td></tr>
+          <tr><td><strong>Cura（Ultimaker）</strong></td><td>Ultimaker</td><td>开源 FDM 切片器，内置晶格填充，路径生成逻辑可参考</td><td>切片引擎中的轮廓偏置算法（类 Net Theme 双轮廓逻辑）</td><td><span class="res-tag res-status-ok">完全开源</span></td></tr>
+          <tr><td><strong>OpenSCAD</strong></td><td>社区</td><td>脚本化 3D 建模，支持隐式几何（via CGAL），可生成 TPMS STL</td><td>低门槛的 TPMS 原型设计，快速验证几何可行性</td><td><span class="res-tag res-status-ok">完全开源</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Key Papers -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">📄 关键论文追踪</span></div>
+    <div class="card-body" style="padding:0">
+      <table class="res-table">
+        <thead><tr><th>论文</th><th>核心贡献</th><th>链接</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Khrapov et al. (2021)</strong><br>MDPI Materials</td><td>首次通过 EBM 的 Wafer Theme 和 Melt Theme 成功制造 Gyroid TPMS，证明准弹性梯度 ~1.5 GPa，与皮质骨匹配</td><td><a class="res-link" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8434612/" target="_blank">pmc.ncbi.nlm.nih.gov/PMC8434612</a></td></tr>
+          <tr><td><strong>Suard (2015)</strong><br>博士论文，格勒诺布尔</td><td>系统比较 Melt 与 Net 主题在 1mm 边界杆件的截面熔合质量，确认 Net Theme 适用范围 ≤1mm</td><td>法国格勒诺布尔大学博士论文库</td></tr>
+          <tr><td><strong>Springer: 3D spot melting patterns (2025)</strong><br>Progress in Additive Manufacturing</td><td>分析三维点阵堆叠策略对 IN718 的能量密度影响，证明点阵对称性可直接映射为晶体织构</td><td><a class="res-link" href="https://link.springer.com/article/10.1007/s40964-025-01255-6" target="_blank">springer.com/s40964-025-01255-6</a></td></tr>
+          <tr><td><strong>Sokollu et al. (2022)</strong><br>Additive Manufacturing</td><td>EBM 制造 BCC/FCC/Gyroid/Primitive/Diamond，Gyroid 尺寸偏差最高达 21.7%</td><td><a class="res-link" href="https://www.sciencedirect.com/science/article/abs/pii/S2214860422005887" target="_blank">ScienceDirect S2214860422005887</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB: About ══════════ -->
+<div class="tab-content" id="tab-about">
+<div class="container" style="max-width:720px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">ℹ️ 模块说明</span></div>
+    <div class="card-body">
+      <div class="sub-grid" style="margin-bottom:20px">
+        <div class="sub-box"><div class="sub-box-title">版本</div><div class="sub-box-content">v2.0 · 2025年3月</div></div>
+        <div class="sub-box"><div class="sub-box-title">搜索维度</div><div class="sub-box-content">7 路并行 AI 搜索</div></div>
+        <div class="sub-box"><div class="sub-box-title">追踪仓库</div><div class="sub-box-content">8 个 GitLab/GitHub 仓库</div></div>
+        <div class="sub-box"><div class="sub-box-title">数据存储</div><div class="sub-box-content">浏览器本地持久化</div></div>
+      </div>
+      <p style="font-size:13px;line-height:1.8;color:var(--gray);margin-bottom:14px">本模块聚焦于<strong>用 Freemelt ONE 实现晶格结构（尤其是 TPMS/Gyroid）打印</strong>这一核心研究问题，通过每周 AI 深度搜索，跟踪以下维度的最新进展：</p>
+      <ul style="font-size:13px;line-height:2;color:var(--gray);padding-left:20px">
+        <li>Freemelt 官方 OBP/obplib 的代码更新和新功能</li>
+        <li>EBM 晶格 / TPMS 结构的最新实验论文</li>
+        <li>Gyroid 打印的维度精度改进与工艺参数</li>
+        <li>主流切片软件（PrusaSlicer、IceSL、Cura）的 Gyroid 路径算法</li>
+        <li>隐式建模工具（nTopology、Rhino/Grasshopper）与 EBM 工作流的对接</li>
+        <li>第三方 GitHub 工具的新版本和功能扩展</li>
+        <li>粉末清除 / 后处理的新工艺</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ── Tab switching ─────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── Storage ───────────────────────────────────────────────────────────
+const STORAGE_KEY = 'freemelt2027v2_entries';
+async function loadEntries() {
+  try { const r = await window.storage.get(STORAGE_KEY); return r ? JSON.parse(r.value) : []; } catch { return []; }
+}
+async function saveEntries(entries) {
+  try { await window.storage.set(STORAGE_KEY, JSON.stringify(entries)); } catch(e) { console.error(e); }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function getWeekLabel() {
+  const d = new Date(), start = new Date(d.getFullYear(),0,1);
+  const w = Math.ceil(((d-start)/86400000 + start.getDay()+1)/7);
+  return `${d.getFullYear()} W${String(w).padStart(2,'0')}`;
+}
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function stepRun(id) { const e=document.getElementById(id); if(e) e.className='step-item running'; }
+function stepDone(id) { const e=document.getElementById(id); if(e) e.className='step-item done'; }
+function resetSteps() { ['s1','s2','s3','s4','s5','s6','s7'].forEach(id=>{ const e=document.getElementById(id); if(e) e.className='step-item'; }); }
+
+// ── Claude API ────────────────────────────────────────────────────────
+async function callClaude(prompt) {
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-20250514", max_tokens:1000,
+      tools:[{type:"web_search_20250305",name:"web_search"}],
+      messages:[{role:"user",content:prompt}]
+    })
+  });
+  if(!r.ok) throw new Error(`API ${r.status}`);
+  const d = await r.json();
+  return d.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+}
+
+// ── Main search ───────────────────────────────────────────────────────
+async function runWeeklySearch() {
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled=true;
+  document.getElementById('btnText').textContent='搜索中...';
+  document.getElementById('btnIcon').textContent='⏳';
+  document.getElementById('progressBox').classList.add('active');
+  document.getElementById('errorBox').classList.remove('active');
+  resetSteps();
+
+  try {
+    const week = getWeekLabel();
+
+    // Q1 — Freemelt official
+    stepRun('s1');
+    const q1 = await callClaude(`Search for very latest updates (2025-2026) about Freemelt obplib Python library on GitLab (gitlab.com/freemelt/openmelt/obplib-python), any new commits, releases, or new Curve/AcceleratingCurve examples. Also check pypi.org/project/obplib for new versions. Also check freemelt.com/knowledge for new Pixelmelt 2.0 features or ProHeat updates. Summarize in 3-5 bullet points in English.`);
+    stepDone('s1');
+
+    // Q2 — GitLab repo updates
+    stepRun('s2');
+    const q2 = await callClaude(`Search for recent activity on these specific repositories: github.com/wiberganton/obpgenerator, github.com/SoftwareImpacts/SIMPAC-2025-26, github.com/nodtem66/Scaffolder, github.com/albertforesg/TPMSgen. Any new commits, issues, pull requests, or releases in 2025-2026? Summarize key updates in English.`);
+    stepDone('s2');
+
+    // Q3 — EBM lattice papers
+    stepRun('s3');
+    const q3 = await callClaude(`Search for the latest 2025-2026 research papers or preprints on: EBM electron beam powder bed fusion lattice structures, TPMS triply periodic minimal surface EBM printing, PBF-EB thin wall gyroid, Freemelt ONE printing results, EBM beam path scanning strategy innovation. Focus on new experimental results, new dimensional accuracy improvements, or new parameter studies. Summarize 3-5 findings.`);
+    stepDone('s3');
+
+    // Q4 — Gyroid specific
+    stepRun('s4');
+    const q4 = await callClaude(`Search specifically for 2025-2026 work on gyroid TPMS EBM printing: any new Wafer Theme equivalent strategies, dimensional accuracy improvements beyond 21.7% deviation, new sintered powder removal techniques from TPMS channels, or papers citing Khrapov 2021 MDPI EBM gyroid paper. Report 3-5 specific findings in English.`);
+    stepDone('s4');
+
+    // Q5 — Slicer/modeler software ecosystem
+    stepRun('s5');
+    const q5 = await callClaude(`Search for 2025-2026 updates in 3D printing slicer and modeling software relevant to EBM lattice printing: 1) PrusaSlicer or OrcaSlicer gyroid slicing algorithm updates; 2) IceSL implicit geometry slicing for metal AM; 3) nTopology new lattice or TPMS features; 4) Rhino Grasshopper new plugins for TPMS to EBM path generation; 5) Materialise 3-matic or Magics new lattice features. Summarize relevant developments in English.`);
+    stepDone('s5');
+
+    // Q6 — Open source tools
+    stepRun('s6');
+    const q6 = await callClaude(`Search for any NEW open source tools or Python libraries released in 2025-2026 that could bridge TPMS geometry generation with EBM beam path generation. Look for: new GitHub repos combining TPMS with EBM/e-beam scanning, new Python packages for metal AM path planning, any implementation of Gyroid isocurve to beam path conversion, scikit-image new features for 3D contour extraction. Report what's new and relevant.`);
+    stepDone('s6');
+
+    // Q7 — Synthesize
+    stepRun('s7');
+    const synth = await callClaude(`You are a research analyst for Freemelt E-PBF lattice printing (context: Freemelt ONE uses open beam path OBP format with obplib Python library; the key challenge is converting TPMS/Gyroid implicit geometry into OBP Curve objects as a Wafer Theme equivalent; ARCAM uses Magics+Wafer Theme but Freemelt has no equivalent yet).
+
+Based on these 6 search summaries, create a structured weekly report in CHINESE (Simplified) for ${week}.
+
+Search 1 (Freemelt official updates): ${q1}
+Search 2 (GitHub repo updates): ${q2}
+Search 3 (EBM lattice papers): ${q3}
+Search 4 (Gyroid specific): ${q4}
+Search 5 (Slicer/modeler software): ${q5}
+Search 6 (New open source tools): ${q6}
+
+Respond ONLY with valid JSON (no markdown fences):
+{
+  "title": "本周摘要标题（18字以内）",
+  "highlights": "本周1-3条最重要发现，重点关注对Freemelt实现TPMS打印有直接帮助的内容（120字以内）",
+  "obplib_update": "obplib/OBP/Pixelmelt官方更新（60-80字）",
+  "repo_update": "GitHub仓库动态（obpgenerator/SIMPAC等）（50-70字）",
+  "research_update": "EBM晶格/TPMS最新论文进展（80-120字）",
+  "software_update": "切片/建模软件生态动态（nTopology/PrusaSlicer/IceSL等）（60-90字）",
+  "tools_update": "新开源工具或方法（50-70字）",
+  "gap_analysis": "本周是否有任何进展填补了TPMS等值线→OBP Curve的技术空白？一句话评估",
+  "action_items": ["行动建议1（30字以内）","行动建议2（30字以内）","行动建议3（30字以内）"],
+  "refs": ["参考来源1","参考来源2","参考来源3","参考来源4"],
+  "keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"],
+  "maturity": "low|medium|high",
+  "gap_filled": true or false
+}`);
+    stepDone('s7');
+
+    let parsed;
+    try {
+      parsed = JSON.parse(synth.replace(/```json|```/g,'').trim());
+    } catch {
+      parsed = {
+        title:`${week} 研究进展`, highlights:"本次七路搜索已完成，详见各分项内容。",
+        obplib_update:q1.slice(0,150), repo_update:q2.slice(0,120),
+        research_update:q3.slice(0,200), software_update:q5.slice(0,150),
+        tools_update:q6.slice(0,120), gap_analysis:"本周无明显突破",
+        action_items:["继续追踪obplib Curve使用案例","关注IceSL切片算法","测试obpgenerator最新版"],
+        refs:["搜索结果","请手动核实","See API results"],
+        keywords:["Freemelt","EBM","TPMS","obplib","晶格"],
+        maturity:"low", gap_filled:false
+      };
+    }
+
+    const entry = { id:Date.now(), week, ts:Date.now(), data:parsed };
+    const entries = await loadEntries();
+    entries.unshift(entry);
+    await saveEntries(entries);
+    renderAll(entries);
+
+  } catch(e) {
+    const eb = document.getElementById('errorBox');
+    eb.textContent = `搜索失败：${e.message}。请稍后重试。`;
+    eb.classList.add('active');
+  } finally {
+    btn.disabled=false;
+    document.getElementById('btnText').textContent='生成本周研究更新';
+    document.getElementById('btnIcon').textContent='⚡';
+    document.getElementById('progressBox').classList.remove('active');
+  }
+}
+
+// ── Render timeline ───────────────────────────────────────────────────
+function renderAll(entries) {
+  document.getElementById('statWeeks').textContent = entries.length;
+  const allRefs = entries.flatMap(e => e.data.refs||[]);
+  document.getElementById('statRefs').textContent = allRefs.length;
+  if(entries.length>0) document.getElementById('lastUpdate').textContent=`最后更新：${fmtDate(entries[0].ts)}`;
+
+  const tl = document.getElementById('timeline');
+  if(entries.length===0){
+    tl.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><h3>暂无研究记录</h3><p>点击「生成本周研究更新」<br>开始你的第一次 Freemelt 晶格研究追踪</p></div>`;
+    return;
+  }
+
+  tl.innerHTML = entries.map((e,i)=>{
+    const d=e.data, isNew=i===0;
+    const matClass = d.maturity==='high'?'mat-high':d.maturity==='medium'?'mat-medium':'mat-low';
+    const matLabel = d.maturity==='high'?'进展成熟':d.maturity==='medium'?'进展中等':'进展初期';
+    const gapColor = d.gap_filled?'tag-green':'tag-amber';
+    const gapLabel = d.gap_filled?'关键空白已填补':'技术空白仍存在';
+    const actions = (d.action_items||[]).map(a=>`<li>${a}</li>`).join('');
+    const refs = (d.refs||[]).map(r=>`<li>${r}</li>`).join('');
+    const keys = (d.keywords||[]).map((k,j)=>{
+      const cs=['tag-blue','tag-green','tag-amber','tag-purple','tag-red'];
+      return `<span class="tag ${cs[j%cs.length]}">${k}</span>`;
+    }).join('');
+
+    return `<div class="entry">
+  <div class="entry-dot ${isNew?'new-dot':''}"></div>
+  <div class="entry-meta">
+    <span>${fmtDate(e.ts)}</span>
+    <span class="week-badge ${isNew?'new':''}">${e.week}</span>
+    ${isNew?'<span class="new-label">● 最新</span>':''}
+  </div>
+  <div class="entry-card ${isNew?'new-card':''}">
+    <div class="entry-head">
+      <h3>${d.title||e.week+' 研究更新'}</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="mat-badge ${matClass}">${matLabel}</span>
+        <span class="tag ${gapColor}" style="font-size:10px">${gapLabel}</span>
+      </div>
+    </div>
+    <div class="entry-body">
+      <div class="sec"><div class="highlight-box">${d.highlights}</div></div>
+      <div class="sub-grid">
+        <div class="sec">
+          <div class="sec-label">🔧 OBP / obplib 动态</div>
+          <div class="sec-content">${d.obplib_update||'—'}</div>
+        </div>
+        <div class="sec">
+          <div class="sec-label">📦 GitHub 仓库更新</div>
+          <div class="sec-content">${d.repo_update||'—'}</div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-label">📄 EBM 晶格 / TPMS 研究进展</div>
+        <div class="sec-content">${d.research_update||'—'}</div>
+      </div>
+      <div class="sub-grid">
+        <div class="sec">
+          <div class="sec-label">🖥 切片 / 建模软件动态</div>
+          <div class="sec-content">${d.software_update||'—'}</div>
+        </div>
+        <div class="sec">
+          <div class="sec-label">🛠 新开源工具 / 方法</div>
+          <div class="sec-content">${d.tools_update||'—'}</div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-label">🔬 技术空白评估</div>
+        <div class="sec-content" style="font-style:italic">${d.gap_analysis||'—'}</div>
+      </div>
+      ${actions?`<div class="sec"><div class="sec-label">✅ 本周行动建议</div><ul class="ref-list">${actions}</ul></div>`:''}
+      ${refs?`<div class="sec"><div class="sec-label">🔗 信息来源</div><ul class="ref-list">${refs}</ul></div>`:''}
+      <div class="tags">${keys}</div>
+    </div>
+  </div>
+</div>`;
+  }).join('');
+}
+
+// ── Resource scanner ──────────────────────────────────────────────────
+async function scanResources() {
+  const btn = document.querySelector('[onclick="scanResources()"]');
+  btn.disabled=true;
+  document.getElementById('scanIcon').textContent='⏳';
+  document.getElementById('scanText').textContent='扫描中...';
+  const box = document.getElementById('scanResult');
+  box.style.display='block';
+  box.textContent='正在调用 AI 扫描各资源平台最新状态...';
+
+  try {
+    const result = await callClaude(`Please check the current status of these specific resources and report any updates found in the last 30 days (as of early 2026):
+1. GitLab: gitlab.com/freemelt/openmelt/obplib-python — latest commit date and version
+2. PyPI: pypi.org/project/obplib — latest version and release date
+3. GitHub: github.com/wiberganton/obpgenerator — latest commit or release
+4. GitHub: github.com/SoftwareImpacts/SIMPAC-2025-26 — any recent activity
+5. GitHub: github.com/nodtem66/Scaffolder — latest activity
+6. freemelt.com/knowledge — any new articles or Pixelmelt updates
+
+For each, say: last updated (approximate), any notable new features or changes, or "no recent changes" if nothing new. Format as a simple list in Chinese.`);
+    box.innerHTML = `<strong>扫描完成：</strong><br>${result.replace(/\n/g,'<br>')}`;
+  } catch(e) {
+    box.textContent = `扫描失败：${e.message}`;
+  } finally {
+    btn.disabled=false;
+    document.getElementById('scanIcon').textContent='🔍';
+    document.getElementById('scanText').textContent='扫描所有资源更新';
+  }
+}
+
+// ── Export Markdown ───────────────────────────────────────────────────
+async function exportMarkdown() {
+  const entries = await loadEntries();
+  if(!entries.length){ alert('暂无记录可导出'); return; }
+  let md = '# FREEMELT 晶格 2027 — 研究周报导出\n\n';
+  entries.forEach(e=>{
+    const d=e.data;
+    md+=`## ${e.week} · ${d.title||'研究更新'}\n\n`;
+    md+=`**生成时间**：${fmtDate(e.ts)}\n\n`;
+    md+=`### 核心发现\n${d.highlights}\n\n`;
+    md+=`### OBP / obplib 动态\n${d.obplib_update}\n\n`;
+    md+=`### GitHub 仓库更新\n${d.repo_update||'—'}\n\n`;
+    md+=`### EBM 晶格 / TPMS 研究进展\n${d.research_update}\n\n`;
+    md+=`### 切片 / 建模软件动态\n${d.software_update||'—'}\n\n`;
+    md+=`### 新开源工具\n${d.tools_update}\n\n`;
+    md+=`### 技术空白评估\n${d.gap_analysis||'—'}\n\n`;
+    if(d.action_items?.length){ md+=`### 行动建议\n${d.action_items.map(a=>`- ${a}`).join('\n')}\n\n`; }
+    if(d.refs?.length){ md+=`### 信息来源\n${d.refs.map(r=>`- ${r}`).join('\n')}\n\n`; }
+    md+='---\n\n';
+  });
+  const blob = new Blob([md],{type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `freemelt2027_research_${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+}
+
+async function clearAll() {
+  if(!confirm('确认清除所有历史记录？此操作不可撤销。')) return;
+  try { await window.storage.delete(STORAGE_KEY); } catch{}
+  renderAll([]);
+  document.getElementById('statWeeks').textContent='0';
+  document.getElementById('statRefs').textContent='0';
+  document.getElementById('lastUpdate').textContent='尚未生成任何周报';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+(async()=>{ const entries=await loadEntries(); renderAll(entries); })();
+</script>
+</body>
+</html>
